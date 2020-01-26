@@ -2,6 +2,10 @@ const debug = require("debug")("core:server");
 
 const globals = require("./globals");
 
+// connect to database
+const db = require("./db");
+db.begin()
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const querystring = require("querystring");
