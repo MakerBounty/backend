@@ -1,0 +1,29 @@
+{
+  "name": "makerbounty-core",
+  "version": "1.0.0",
+  "description": "maker bounty website monolithic server",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/makerbounty/core.git"
+  },
+  "author": "dvtate",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/makerbounty/core/issues"
+  },
+  "homepage": "https://gitlab.com/makerbounty/core#readme",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "body-parser": "^1.19.0",
+    "debug": "^4.1.1",
+    "express": "^4.17.1",
+    "mysql": "^2.18.1",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.8",
+    "validator": "^12.2.0"
+  }
+}
