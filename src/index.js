@@ -6,14 +6,15 @@ const globals = require("./globals");
 const db = require("./db");
 db.begin()
 
+// 
 const express = require("express");
-const bodyParser = require("body-parser");
-const querystring = require("querystring");
-
 const app = express();
 
-// 
+// parse body for POST requests
+const bodyParser = require("body-parser");
 app.use(bodyParser());
+
+const querystring = require("querystring");
 
 // trust CDN
 app.set("trust-proxy", 1);
