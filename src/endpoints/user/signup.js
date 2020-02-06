@@ -6,12 +6,6 @@ const globals = require("../../globals");
 const db = require("../../db");
 
 
-function createUser(){
-
-}
-
-
-
 // POST /api/user/signup
 module.exports = async (req, res) => {
     /* Body:
@@ -21,7 +15,6 @@ module.exports = async (req, res) => {
         email: "kingh2@email.gov.uk"
     }
     */
-
 
     // anything missing?
     if (!req.body.email) 
@@ -33,13 +26,17 @@ module.exports = async (req, res) => {
 
     // form validation
     if (req.body.username.length > 40)
-        return res.status(400).send("username must be less than 40 chars");
+        return res.status(400).send("Username must be less than 40 chars");
+
+    // get user feedback to maybe find other acceptable characters
+    if (!req.body.username.match(/[a-zA-Z0-9\-\_\~\.]/))
+        return res.status(400).send("Username contains invalid characters");
     if (!validator.isEmail("" + req.body.email))
         return res.status(400).send("Invalid email");
 
     // check if username is already used
     const dupUsername = await db.queryProm("SELECT 1 FROM users WHERE username=?", [ req.body.username ], true);
-    if (dupUsername instanceof Error) 
+    if (dupUsername instanceof Error)
         return res.status(500).send(dupUsername.error);
     if (dupUsername.length) {
         debug("duplicate username: %s", req.body.username);
@@ -59,6 +56,18 @@ module.exports = async (req, res) => {
     let userId;
     for (;;) {
         userId = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER);
-        
+        const pwHash = auth.getPasswordHash(userId, req.body.password);
+
+        const result = await db.queryProm(
+            `INSERT INTO users (userId, username, email, hashedPassword, createdTs) VALUES (?, ?, ?, ?, ?);` [
+                userId, req.body.username, req.body.email,  pwHash, Date.now() ], false);
+
+        if (result instanceof Error) {
+            if (result.message.match(/Duplicate entry '.+' for key 'PRIMARY'/))
+                continue;
+            return res.status(500).send(result.error);
+        }
     }
+
+    // todo: add signin welcome system and email verification
 };

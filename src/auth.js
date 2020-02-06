@@ -7,14 +7,18 @@ const debug = require("debug")("core:auth");
 
 // creates a login token for user
 // returns token
-async function generateToken(userId) {
+async function generateToken(userId, duration) {
+
+    // "stay logged in"
+    const duration = duration ? "interval 6 month" : "interval 12 hour";
+
     for (; ;) {
         // generate token
         // 48 random bytes produces a 64 char of b64 encoded token
         const token = crypto.randomBytes(48).toString("base64");
         // add token to db
         const error = await db.queryProm(`INSERT INTO authTokens (authToken, userId, authTokenExpiration)
-                VALUES (?, ?, NOW() + interval 2 hour)`,
+                VALUES (?, ?, NOW() + ${duration})`,
             [token, userId]);
         
         if (!(error instanceof Error))
@@ -60,6 +64,8 @@ async function authUserSafe(token) {
     return { userId };
 }
 
+
+// 
 function getPasswordHash(userId, password) {
     return crypto
         .createHash('sha512')

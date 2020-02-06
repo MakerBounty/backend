@@ -53,6 +53,7 @@ module.exports.queryProm = async (query, params, ro) => {
                     resolve(result);
             })
         } catch (error) /* istanbul ignore next */ {
+            debug(error);
             resolve(error);
         }
     });

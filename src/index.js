@@ -21,13 +21,10 @@ app.set("trust-proxy", 1);
 
 
 // api endpoints
-app.use("/api", require("./endpoints"));
+app.use("/api1", require("./endpoints"));
 
 // static content
-app.use('/', express.static("./static/build", { fallthrough: true }));
-
-// pages
-app.use('/', require("./pages"));
+app.use("/static", express.static("./static/build", { fallthrough: true }));
 
 if (require.main == module) 
     app.listen(globals.port, () => 
