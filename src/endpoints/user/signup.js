@@ -1,4 +1,4 @@
-const debug = require("debug")("core:endpoints:signup");
+const debug = require("debug")("core:endpoints:user:signup");
 
 const validator = require("validator");
 
@@ -24,10 +24,12 @@ module.exports = async (req, res) => {
     if (!req.body.password)
         return res.status(400).send("Missing password");
 
+    
     // form validation
     if (req.body.username.length > 40)
         return res.status(400).send("Username must be less than 40 chars");
-
+    req.body.username.toLowerCase();
+    
     // get user feedback to maybe find other acceptable characters
     if (!req.body.username.match(/[a-zA-Z0-9\-\_\~\.]/))
         return res.status(400).send("Username contains invalid characters");

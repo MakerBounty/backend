@@ -12,7 +12,7 @@ const app = express();
 
 // parse body for POST requests
 const bodyParser = require("body-parser");
-app.use(bodyParser());
+app.use(bodyParser.json());
 
 const querystring = require("querystring");
 
@@ -21,11 +21,12 @@ app.set("trust-proxy", 1);
 
 
 // api endpoints
-app.use("/api1", require("./endpoints"));
+app.use("/api", require("./endpoints"));
 
 // static content
 app.use("/static", express.static("./static/build", { fallthrough: true }));
 
+
 if (require.main == module) 
     app.listen(globals.port, () => 
-        debug("Server listening on port %d", port));
+        debug("Server listening on port %d", globals.port));

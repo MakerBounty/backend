@@ -1,7 +1,7 @@
 
 const db = require("../../db");
 
-
+// GET /user/describe/:username
 module.exports = async (req, res) => {
 
     const user = await authUserSafe(req.get("Authorization"));

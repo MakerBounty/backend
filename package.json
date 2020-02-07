@@ -4,7 +4,8 @@
   "description": "maker bounty website monolithic server",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start" : "DEBUG=core:* node src/index.js",
+    "forever" : "DEBUG=core:* forever src/index.js"
   },
   "repository": {
     "type": "git",
