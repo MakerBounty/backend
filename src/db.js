@@ -37,6 +37,7 @@ module.exports.begin = () => {
 }
 
 module.exports.queryProm = async (query, params, ro) => {
+    // debug({query, params, ro});
     let d = ro ? pool_rr : pool_rw;
     if (!params) params = [];
 

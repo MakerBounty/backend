@@ -10,7 +10,7 @@ const debug = require("debug")("core:auth");
 async function generateToken(userId, duration) {
 
     // "stay logged in"
-    const duration = duration ? "interval 6 month" : "interval 12 hour";
+    duration = duration ? "interval 6 month" : "interval 12 hour";
 
     for (; ;) {
         // generate token

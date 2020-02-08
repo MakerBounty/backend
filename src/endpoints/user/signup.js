@@ -4,7 +4,7 @@ const validator = require("validator");
 
 const globals = require("../../globals");
 const db = require("../../db");
-
+const auth = require("../../auth");
 
 // POST /api/user/signup
 module.exports = async (req, res) => {
@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
         return res.status(500).send(dupUsername.error);
     if (dupUsername.length) {
         debug("duplicate username: %s", req.body.username);
-        res.status(400).send(`username '${req.body.username}' is already taken`);
+        return res.status(400).send(`username '${req.body.username}' is already taken`);
     }
 
     // check if email is already used
@@ -51,7 +51,7 @@ module.exports = async (req, res) => {
         return res.status(500).send(dupEmail.error);
     if (dupEmail.length) {
         debug("duplicate email: %s", req.body.email);
-        res.status(400).send(`email '${req.body.email}' already in use, log in instead`);
+        return res.status(400).send(`email '${req.body.email}' already in use, log in instead`);
     }
 
     // add them to db
@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
         const pwHash = auth.getPasswordHash(userId, req.body.password);
 
         const result = await db.queryProm(
-            `INSERT INTO users (userId, username, email, hashedPassword, createdTs) VALUES (?, ?, ?, ?, ?);` [
+            `INSERT INTO users (userId, username, email, hashedPassword, createdTs) VALUES (?, ?, ?, ?, ?);`, [
                 userId, req.body.username, req.body.email,  pwHash, Date.now() ], false);
 
         if (result instanceof Error) {
@@ -69,7 +69,9 @@ module.exports = async (req, res) => {
                 continue;
             return res.status(500).send(result.error);
         }
+        break;
     }
 
+    res.send(req.body.username);
     // todo: add signin welcome system and email verification
 };

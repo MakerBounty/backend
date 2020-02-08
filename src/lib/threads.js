@@ -1,54 +1,40 @@
 const db = require("../db");
 const debug = require("debug")("core:lib:threads");
 
-/// TODO: refactor this, save memory, things might not be defined for new posts
-
-
 // Views CDN cache management
-const threadViews = {};
-const threadViewsDelta = {};
+let threadViewsDelta = {};
 
 // load views counters into cache
-async function loadViews(){
-
-    // fetch from db
-    const resp = await db.queryProm("SELECT bountyThreadId, views FROM bountyThreads", [], true);
-    if (resp instanceof Error) {
-        debug("loadViews failed: %s", resp);
-        return
+function incrViews(bountyThreadId) {
+    if (threadViewsDelta[bountyThreadId]) {
+        threadViewsDelta[bountyThreadId]++;
+    } else {
+        threadViewsDelta[bountyThreadId] = 1;
     }
-
-    // load into cache
-    for (const o of resp) {
-        threadViews[o.bountyThreadId] = o.views;
-        threadViewsDelta[o.bountyThreadId] = 0;
-    }
-    debug("successfully loaded %d thread view counters");
 }
 
 // update item view counters in database
 async function updateViews() {
-    const proms = [];
-    for (const id in threadViewsDelta)
-        if (threadViewsDelta[id] != 0)
-            proms.push(db.queryProm("UPDATE bountyThreads SET view = views + ? WHERE bountyThreadId = ?", [
-                threadViewsDelta[id], id
-            ], false).catch(e => debug("updateView: ", e)));
+    // populate db update promise arr
+    const proms = Object.keys(threadViewsDelta).map(id => 
+        db.queryProm("UPDATE bountyThreads SET views = views + ? WHERE bountyThreadId = ?", 
+            [ threadViewsDelta[id], id], false).catch(e => {
+                debug("updateView: ", e);
+                return e;
+            }));
 
     const succ = await Promise.all(proms);
+
+    // we're now in sync with server
+    threadViewsDelta = {};
 
     debug("successfully updated %d thread view counters", 
         succ.filter(r => !(r instanceof Error)).length);
 
-    await loadViews();
-
 }
 
-// load views 2 seconds after starting api server
-setTimeout(loadViews, 2000);
-
-// update view counters every hour
-setInterval(updateViews, 1000 * 60 * 60);
+// update view counters every 5min
+setInterval(updateViews, 1000 * 60 * 5);
 
 
 async function describeComment(commentId){
@@ -59,7 +45,7 @@ async function describeComment(commentId){
 // get full thread contents incl all comments
 async function detail(bountyThreadId) {
     // get original thread post
-    const otp_prom = db.queryProm(`SELECT title, tags, specBody, opUserId, ts
+    const otp_prom = db.queryProm(`SELECT title, tags, specBody, opUserId, views, ts
         FROM bountyThreads WHERE bountyThreadId = ?`, [ bountyThreadId ], true);
     // get comments
     const com_prom = db.queryProm(`SELECT bountyCommentId, authorUserId, body, review, ts
@@ -77,14 +63,14 @@ async function detail(bountyThreadId) {
         WHERE bountyThreadId = ?`, [ bountyThreadId ], true);
 
     // add a view
-    threadViewsDelta[bountyThreadId]++;
+    incrViews(bountyThreadId);
 
     let [ otp , com, tv, cv ] = await Promise.all([ otp_prom, com_prom, tv_prom, cv_prom ]);
 
     otp = otp[0];
     otp.score = tv[0].score;
 
-    otp.views = threadViews[bountyThreadId] + threadViewsDelta[bountyThreadId];    
+    otp.views += threadViewsDelta[bountyThreadId];
 
     // get comment votes
     for (let i = 0; i < com.length; i++)
@@ -110,8 +96,6 @@ async function short(bountyThreadId) {
         FROM bountyComments WHERE bountyThreadId=? AND 
         review IN ("pending-solution", "accepted", "rejected")`
         [ bountyThreadId ], true);
-
-    threadViewsDelta[bountyThreadId]++;
     
     // number of people watching the data
     const bw_prom = db.queryProm(`SELECT COUNT(*) AS watchers FROM bountyWatch 
@@ -120,6 +104,7 @@ async function short(bountyThreadId) {
     const tv_prom = db.queryProm(`SELECT SUM(direction) AS score FROM bountyVotes 
         WHERE bountyThreadId=?`, [ bountyThreadId ], true);
     
+    incrViews(bountyThreadId);
     let [ [ otp ], [ com ], [ sln ], [ bw ], [ tv ] ] = await Promise.all([
          otp_prom, com_prom, sln_prom, bw_prom, tv_prom ]);
 
@@ -127,13 +112,13 @@ async function short(bountyThreadId) {
     otp.solutions = sln.slnCount;
     otp.watching = bw.watchers;
     otp.score = tv.score;
-    otp.views = threadViews[bountyThreadId] + threadViewsDelta[bountyThreadId];
-    
+    otp.views += threadViewsDelta[bountyThreadId];
+
     return otp;
-    
+
 }
 
 
 module.exports = {
-    loadViews, updateViews, detail, short,
+    incrViews, updateViews, detail, short,
 };

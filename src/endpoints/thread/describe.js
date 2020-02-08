@@ -18,7 +18,7 @@ const shortDesc = async (req, res) => {
 };
 
 // GET /thread/describe/long/:bountyThreadId
-cosnt longDesc = async (req, res) => {
+const longDesc = async (req, res) => {
     try {
         const ret = await thread.detail(req.params.bountyThreadId);
         res.json(ret);
@@ -26,4 +26,8 @@ cosnt longDesc = async (req, res) => {
         res.status(500).send(e);
         debug(e);
     }
+};
+
+module.exports = {
+    shortDesc, longDesc
 };

@@ -18,11 +18,14 @@ module.exports = async (req, res) => {
     const userId = user.userId;
 
     let field = Object.keys(req.body)[0];
+    if (!field)
+        return res.status(400).send("missing field to modify");
+    
     let value = req.body[field];
     // validate field
     if (field == "email" && !validator.isEmail(req.body[field])) {
         debug("invalid email: %s", value);
-        res.status(400).send("invalid email");
+        return res.status(400).send("invalid email");
 
     // not case senseitive usernames
     } else if (field == "username") {
@@ -36,9 +39,11 @@ module.exports = async (req, res) => {
     // only can change these fields
     } else if (!["email", "username", "password", "bio", ].includes(field)) {
         debug("invalid field: %s", field);
-        res.status(400).send("invalid field");
+        return res.status(400).send("invalid field");
     }
 
+    
+    debug("alter user#%d SET %s = %s", userId, field, value);
     db.queryProm(`ALTER TABLE users SET ${ field } = ? WHERE userId = ?`, [ value, userId ], false)
         .then(() => res.status(200).send("done"))
         .catch(debug);

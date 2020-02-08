@@ -13,6 +13,11 @@ const debug = require("debug")("core:endpoints:user:signin");
 */
 module.exports = async (req, res) => {
     const { login, password, duration } = req.body;
+
+    if (!login)
+        return res.status(400).send("missing username/email");
+    if (!password)
+        return res.status(400).send("missing password");
     
     const user = await db.queryProm(`SELECT userId, hashedPassword FROM users 
         WHERE ${login.match(/\@/) ? "email" : "username"} = ?`, [ login.toLowerCase(), ], true);
