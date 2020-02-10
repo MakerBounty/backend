@@ -13,7 +13,7 @@ const auth = require("../../auth");
 
 */
 module.exports = async (req, res) => {
-    const user = await authUserSafe(req.get("Authorization"));
+    const user = await auth.authUserSafe(req.get("Authorization"));
     if (user.error)
         return res.status(401).send(user.error);
     const userId = user.userId;
@@ -28,16 +28,20 @@ module.exports = async (req, res) => {
     req.body.tags = JSON.stringify(req.body.tags);
 
     let bountyThreadId;
+    // rng thread ID
     for (; ;) {
         bountyThreadId = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER);
-        const result = await db.queryProm(`INSERT INTO bountyThreads (bountyThreadId, title, tags, )`)
+        const result = await db.queryProm(`INSERT INTO bountyThreads (bountyThreadId, title, tags, specBody, opUserId, ts) 
+            VALUES (?, ?, ?, ?, ?, ?)`, [ bountyThreadId, req.body.title,
+                req.body.tags, req.body.spec, userId, Date.now(), ], false);
 
         if (result instanceof Error) {
             if (result.message.match(/Duplicate entry '.+' for key 'PRIMARY'/))
                 continue;
             return res.status(500).send(result.error);
         }
-        
+
+        debug("new thread: %d", bountyThreadId);
         return res.json(bountyThreadId);
         
     }

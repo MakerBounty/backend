@@ -12,7 +12,7 @@ const auth = require("../../auth");
     }
 */
 module.exports = async (req, res) => {
-    const user = await authUserSafe(req.get("Authorization"));
+    const user = await auth.authUserSafe(req.get("Authorization"));
     if (user.error)
         return res.status(401).send(user.error);
     const userId = user.userId;
@@ -41,10 +41,9 @@ module.exports = async (req, res) => {
         debug("invalid field: %s", field);
         return res.status(400).send("invalid field");
     }
-
     
-    debug("alter user#%d SET %s = %s", userId, field, value);
-    db.queryProm(`ALTER TABLE users SET ${ field } = ? WHERE userId = ?`, [ value, userId ], false)
+    debug("update user#%d SET %s = %s", userId, field, value);
+    db.queryProm(`UPDATE users SET ${ field } = ? WHERE userId = ?`, [ value, userId ], false)
         .then(() => res.status(200).send("done"))
         .catch(debug);
 

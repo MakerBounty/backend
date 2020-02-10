@@ -8,7 +8,7 @@ const config = {
     },
     
     development: {
-        port: 8080,
+        port: 5050,
         db: {
             host: "localhost",
             user: "root",
@@ -24,7 +24,7 @@ const config = {
     },
     
     production: {
-        port: 80,
+        port: 5050,
         // todo, use production database..
         db: {
             host: "localhost",
@@ -40,7 +40,6 @@ const config = {
         }
     }
 };
-
 
 
 const env = process.env.NODE_ENV;

@@ -13,6 +13,6 @@ router.post("/signin", require("./signin"));
 router.get("/describe/:username", require("./describe"));
 
 // change user settings
-router.post("/edit"), require("./edit");
+router.post("/edit", require("./edit"));
 
 module.exports = router;

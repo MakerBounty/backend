@@ -73,4 +73,16 @@ function getPasswordHash(userId, password) {
         .digest('hex')
 }
 
-module.exports = { getPasswordHash, authUserSafe, authUser, generateToken, };
+async function requireAuthMiddleware(req, res, next) {
+    const user = await authUserSafe(req.get("Authorization"));
+    if (user.error)
+        return res.status(401).send(user.error);
+    req.session = user;
+    return next();
+}
+
+//
+module.exports = { 
+    getPasswordHash, authUserSafe, authUser,
+    generateToken, requireAuthMiddleware 
+};
