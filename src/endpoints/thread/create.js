@@ -10,7 +10,6 @@ const auth = require("../../auth");
     "tags" : ["C++", "SDL", "Linux", "game"],
     "spec" : "Guns and bombs and space ships. Teleport with buttons. Arrow keys for movement. 3d"
 }
-
 */
 module.exports = async (req, res) => {
     const user = await auth.authUserSafe(req.get("Authorization"));

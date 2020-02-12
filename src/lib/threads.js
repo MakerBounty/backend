@@ -43,7 +43,7 @@ async function describeComment(commentId){
 
 
 // get full thread contents incl all comments
-async function detail(bountyThreadId) {
+async function detail(bountyThreadId, userId) {
     // get original thread post
     const otp_prom = db.queryProm(`SELECT title, tags, specBody, opUserId, views, ts
         FROM bountyThreads WHERE bountyThreadId = ?`, [ bountyThreadId ], true);
@@ -53,39 +53,47 @@ async function detail(bountyThreadId) {
     // get thread votes
     const tv_prom = db.queryProm(`SELECT SUM(direction) AS score FROM bountyVotes 
         WHERE bountyThreadId=?`, [ bountyThreadId ], true);
+    
     // get comment votes
-    const cv_prom = db.queryProm(`SELECT SUM(direction) AS score
+    const cv_prom = db.queryProm(`SELECT bountyCommentId, SUM(direction) AS score
         FROM commentVotes WHERE bountyCommentId in (
             SELECT bountyCommentId FROM bountyComments 
                 WHERE bountyThreadId = ?) GROUP BY bountyCommentId`, [ bountyThreadId ], true);
     // number of people watching the data
-    const bw_prom = db.queryProm(`SELECT COUNT(*) AS watchers FROM bountyWatch 
+    const bw_prom = db.queryProm(`SELECT userId, ts FROM bountyWatch
         WHERE bountyThreadId = ?`, [ bountyThreadId ], true);
 
     // add a view
     incrViews(bountyThreadId);
 
-    let [ otp , com, tv, cv ] = await Promise.all([ otp_prom, com_prom, tv_prom, cv_prom ]);
-
-    otp = otp[0];
-    otp.score = tv[0].score;
-
+    let [ [ otp ], com, [ tv ], [ cv ], bw ] = await Promise.all([
+        otp_prom, com_prom, tv_prom, cv_prom, bw_prom ]);
+    
+    otp.score = tv.score;
     otp.views += threadViewsDelta[bountyThreadId];
-
+    otp.watching = bw;
+    
     // get comment votes
     for (let i = 0; i < com.length; i++)
         com[i].score = cv.find(s => s.bountyCommentId == com[i].bountyCommentId).score;
 
     otp.comments = com;
 
-    return otp;
+    if (userId) {
+        // get user vote
+        const [ uv ] = await db.queryProm(`SELECT direction AS score FROM bountyVotes 
+            WHERE bountyThreadId=? and userId=?`, [ bountyThreadId, userId ], true);
+        otp.userVote = uv ? uv.score : null;
+    }
 
+    return otp;
 }
 
 // short description of thread ie - for a stream
-async function short(bountyThreadId) {
+async function short(bountyThreadId, userId) {
+
     // get original thread post
-    const otp_prom = db.queryProm(`SELECT title, tags, specBody, opUserId, ts
+    const otp_prom = db.queryProm(`SELECT title, tags, specBody, opUserId, ts, views
         FROM bountyThreads WHERE bountyThreadId = ?`, [ bountyThreadId ], true);
     
     // number of comments
@@ -94,16 +102,18 @@ async function short(bountyThreadId) {
 
     const sln_prom = db.queryProm(`SELECT COUNT(*) as slnCount
         FROM bountyComments WHERE bountyThreadId=? AND 
-        review IN ("pending-solution", "accepted", "rejected")`
+        review IN ("pending-solution", "accepted", "rejected")`,
         [ bountyThreadId ], true);
     
     // number of people watching the data
     const bw_prom = db.queryProm(`SELECT COUNT(*) AS watchers FROM bountyWatch 
         WHERE bountyThreadId = ?`, [ bountyThreadId ], true);
+
     // get thread votes
     const tv_prom = db.queryProm(`SELECT SUM(direction) AS score FROM bountyVotes 
         WHERE bountyThreadId=?`, [ bountyThreadId ], true);
-    
+
+
     incrViews(bountyThreadId);
     let [ [ otp ], [ com ], [ sln ], [ bw ], [ tv ] ] = await Promise.all([
          otp_prom, com_prom, sln_prom, bw_prom, tv_prom ]);
@@ -113,6 +123,13 @@ async function short(bountyThreadId) {
     otp.watching = bw.watchers;
     otp.score = tv.score;
     otp.views += threadViewsDelta[bountyThreadId];
+
+    if (userId) {
+        // get user vote
+        const [ uv ] = await db.queryProm(`SELECT direction AS score FROM bountyVotes 
+            WHERE bountyThreadId=? and userId=?`, [ bountyThreadId, userId ], true);
+        otp.userVote = uv ? uv.score : null;
+    }
 
     return otp;
 
