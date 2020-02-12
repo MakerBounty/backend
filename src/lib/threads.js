@@ -42,6 +42,8 @@ async function describeComment(commentId){
 }
 
 
+// TODO: refactor to reduce SQL quereies and change variable names to improve readability
+
 // get full thread contents incl all comments
 async function detail(bountyThreadId, userId) {
     // get original thread post
@@ -66,7 +68,7 @@ async function detail(bountyThreadId, userId) {
     // add a view
     incrViews(bountyThreadId);
 
-    let [ [ otp ], com, [ tv ], [ cv ], bw ] = await Promise.all([
+    let [ [ otp ], com, [ tv ], cv, bw ] = await Promise.all([
         otp_prom, com_prom, tv_prom, cv_prom, bw_prom ]);
     
     otp.score = tv.score;
@@ -74,9 +76,11 @@ async function detail(bountyThreadId, userId) {
     otp.watching = bw;
     
     // get comment votes
-    for (let i = 0; i < com.length; i++)
-        com[i].score = cv.find(s => s.bountyCommentId == com[i].bountyCommentId).score;
-
+    for (let i = 0; i < com.length; i++) {
+        const v = cv.find(s => s.bountyCommentId == com[i].bountyCommentId);
+        if (v)
+            com[i].score = v.score;
+    }
     otp.comments = com;
 
     if (userId) {

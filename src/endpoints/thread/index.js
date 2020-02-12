@@ -11,7 +11,8 @@ router.get("/describe/short/:bountyThreadId", require("./describe").shortDesc);
 // actions 
 // vote
 router.post("/vote/:bountyThreadId/:direction", require("./vote"));
-
+// watch
+router.post("/watch/:bountyThreadId", require("./watch"));
 
 // comments
 router.post("/comment/create/:bountyThreadId", require("./comment/create"));
