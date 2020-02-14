@@ -3,11 +3,10 @@ const debug = require("debug")("core:globals");
 const config = {
     default: {
         pw_salt: "3rkjn34jfqknjnqgk5nkjenKJNJ$jtnqk",
-
-
     },
     
     development: {
+        // listening port
         port: 5050,
         db: {
             host: "localhost",
@@ -24,18 +23,19 @@ const config = {
     },
     
     production: {
+        // listening port
         port: 5050,
         // todo, use production database..
         db: {
             host: "localhost",
             user: "root",
-            password: "password",
+            password: "corki.js.org_roflcopter",
             database: "makerbounty",
         },
         ro_db: {
             host: "localhost",
             user: "root",
-            password: "password",
+            password: "corki.js.org_roflcopter",
             database: "makerbounty",
         }
     }
