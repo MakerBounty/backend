@@ -1,9 +1,9 @@
 
 const debug = require("debug")("core:endpoints:user:describe");
 const db = require("../../db");
-
+const auth = require("../../auth");
 // GET /user/describe/:username
-module.exports = async (req, res) => {
+module.exports.username = async (req, res) => {
 
     if (!req.params.username)
         return res.status(400).send();
@@ -21,5 +21,26 @@ module.exports = async (req, res) => {
     }
     
     res.json(result[0]);
+
+};
+
+// GET /user/self
+module.exports.self = async (req, res) => {
+    const user = await auth.authUserSafe(req.get("Authorization"));
+    if (user.error)
+        return res.status(401).send(user.error);
+    const userId = user.userId;
+
+    const ret = await db.queryProm(`SELECT userId, email, username, createdTs 
+        FROM users WHERE userId=?`, [userId, ], true);
+    
+    if (ret instanceof Error)
+        return res.status(500).send(ret.error);
+    if (!ret[0]) {
+        debug("invalid user token, maybe deleted account?");
+        return res.status(500).send("deleted account");
+    }
+
+    res.json(ret[0]);
 
 };

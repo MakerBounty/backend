@@ -28,8 +28,10 @@ async function updateViews() {
     // we're now in sync with server
     threadViewsDelta = {};
 
-    debug("successfully updated %d thread view counters", 
-        succ.filter(r => !(r instanceof Error)).length);
+    const nUpdated = succ.filter(r =>
+        r && !(r instanceof Error)).length;
+    if (nUpdated)
+        debug("successfully updated %d thread view counters", nUpdated);
 
 }
 
