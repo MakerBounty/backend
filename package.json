@@ -18,7 +18,7 @@
   },
   "homepage": "https://gitlab.com/makerbounty/core#readme",
   "dependencies": {
-    "axios": "^0.21.2",
+    "axios": "^1.6.0",
     "body-parser": "^1.20.1",
     "cors": "^2.8.5",
     "debug": "^4.1.1",
