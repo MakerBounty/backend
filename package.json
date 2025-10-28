@@ -25,6 +25,6 @@
     "express": "^4.21.2",
     "mysql": "^2.18.1",
     "node-fetch": "^3.2.10",
-    "validator": "^13.7.0"
+    "validator": "^13.15.20"
   }
 }
